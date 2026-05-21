@@ -201,12 +201,6 @@ Fonctionnel :
 - calcul TF-IDF;
 - dashboard Streamlit avec trois vues principales.
 
-A ameliorer :
-
-- deplacer le point d'entree Streamlit vers `main.py` ou corriger les chemins pour pouvoir lancer depuis la racine;
-- sauvegarder les resultats preprocesses pour eviter de recalculer le pipeline complet;
-- ajouter des tests unitaires sur les fonctions de preprocessing et d'analyse;
-- ameliorer la comparaison TF-IDF en utilisant les vrais poids agreges par president.
 
 ## Commandes utiles
 
