@@ -1,49 +1,71 @@
-📋 To-Do List : Dashboard Discours Présidentiels US
-🛠️ Étape 1 : Initialisation & Environnement
-[X] Créer le dépôt GitHub et le cloner en local.
+# To-Do List - Dashboard Discours Presidentiels US
 
-[X] Configurer l'environnement virtuel (venv ou conda).
+## Etape 1 - Initialisation et environnement
 
-[X] Créer le fichier requirements.txt final (incluant streamlit) et installer les dépendances.
+- [x] Creer le depot GitHub et le cloner en local.
+- [x] Configurer l'environnement virtuel avec `venv` ou `conda`.
+- [x] Creer le fichier `requirements.txt` final, incluant Streamlit.
+- [x] Installer les dependances du projet.
+- [x] Telecharger ou configurer les ressources NLP indispensables, notamment le modele SpaCy `en_core_web_sm`.
 
-[X] Télécharger les ressources NLP indispensables (modèle anglais de SpaCy ou lexiques NLTK).
+## Etape 2 - Data ingestion et preprocessing
 
-📊 Étape 2 : Data Ingestion & Prétraitement (4 points)
-[X] Télécharger le dataset Kaggle et le placer dans un dossier data/.
+- [x] Telecharger le dataset et le placer dans le dossier `data/`.
+- [x] Charger les donnees avec `pandas`.
+- [x] Inspecter les donnees et gerer les valeurs manquantes ou anomalies.
+- [x] Supprimer les doublons si necessaire.
+- [x] Nettoyer les artefacts d'encodage dans les discours.
+- [x] Ecrire le pipeline de nettoyage semantique : minuscules, ponctuation, stop words.
+- [x] Implementer la tokenisation des discours.
+- [x] Implementer la lemmatisation des discours.
+- [x] Ajouter le POS tagging.
+- [x] Ajouter la reconnaissance d'entites nommees (NER).
+- [x] Generer une colonne `text_cleaned` exploitable pour le TF-IDF.
 
-[X] Charger et inspecter les données avec pandas (gestion des valeurs manquantes ou anomalies).
+## Etape 3 - Traitements et analyses IA
 
-[X] Écrire le pipeline de nettoyage sémantique : passage en minuscules, suppression de la ponctuation et filtrage des stop words.
+- [x] Calculer les occurrences globales des mots-cles.
+- [x] Calculer les occurrences des mots-cles par president.
+- [x] Calculer les scores de sentiment avec TextBlob.
+- [x] Ajouter la polarite de chaque discours.
+- [x] Ajouter la subjectivite de chaque discours.
+- [x] Calculer le TF-IDF avec `scikit-learn`.
+- [x] Extraire les mots les plus specifiques de chaque discours ou mandat.
+- [x] Integrer les analyses dans un pipeline global.
 
-[X] Implémenter la tokenisation et la lemmatisation des discours.
+## Etape 4 - Dashboard Streamlit et visualisations
 
-[X] Ajouter l'extraction linguistique : exécution du POS Tagging et de la reconnaissance d'entités nommées (NER).
+- [x] Initialiser l'application Streamlit dans `src/visualization.py`.
+- [x] Configurer la page Streamlit.
+- [x] Ajouter une sidebar pour selectionner un president.
+- [x] Creer une structure en onglets pour separer les analyses.
+- [x] Integrer un graphique lineaire pour l'evolution temporelle des sentiments.
+- [x] Afficher les metriques de polarite et subjectivite pour le president selectionne.
+- [x] Integrer un nuage de mots dynamique selon le president selectionne.
+- [x] Integrer un graphique en barres des frequences de mots.
+- [x] Integrer un tableau des frequences.
+- [x] Integrer un graphique miroir pour comparer les mots-cles via le TF-IDF.
+- [x] Mettre en cache le pipeline d'analyse avec `st.cache_data`.
 
-🧠 Étape 3 : Traitements & Analyses IA (7 points)
-[ ] Calculer les occurrences : extraire les fréquences de mots clés (globaux et par président).
+## Etape 5 - Documentation et bonnes pratiques
 
-[ ] Calculer les scores de sentiment : appliquer TextBlob ou VADER pour obtenir la polarité et la subjectivité de chaque texte.
+- [x] Structurer le code dans des modules propres sous `src/`.
+- [x] Basculer les fonctions de preprocessing dans `src/preprocessing.py`.
+- [x] Basculer les fonctions d'analyse dans `src/analysis.py`.
+- [x] Basculer les visualisations et l'interface dans `src/visualization.py`.
+- [x] Completer le fichier `README.md`.
+- [x] Expliquer dans le README comment installer le projet.
+- [x] Expliquer dans le README comment lancer l'application Streamlit.
+- [ ] Rediger le rapport PDF avec la demarche technique.
+- [ ] Ajouter des captures d'ecran du dashboard dans le rapport.
+- [ ] Rediger les analyses et insights metier dans le rapport.
+- [ ] Push final sur GitHub.
 
-[ ] Calculer le TF-IDF : utiliser scikit-learn pour faire ressortir les mots les plus spécifiques à chaque mandat.
+## Ameliorations possibles
 
-💻 Étape 4 : Développement du Dashboard Streamlit (Bonus & Visuels)
-[ ] Initialiser l'application Streamlit (app.py ou main.py).
-
-[ ] Créer la structure de l'interface : une barre latérale (Sidebar) pour sélectionner le président ou l'époque, et des onglets pour séparer les analyses.
-
-[ ] Intégrer les visualisations requises :
-
-Un graphique linéaire interactif pour l'évolution temporelle des sentiments.
-
-Un nuage de mots dynamique selon le président sélectionné.
-
-Un graphique en barres en opposition (Mirror Bar Chart) pour comparer les mots clés via le TF-IDF.
-
-📄 Étape 5 : Rédaction du Rapport & Bonnes Pratiques
-[ ] Structurer le code final : basculer les fonctions lourdes dans des modules propres (dossier src/) pour respecter les best practices.
-
-[ ] Rédiger le rapport PDF : documenter ta démarche technique, y ajouter des captures d'écran de tes plus beaux graphiques Streamlit, et rédiger tes analyses/insights (ex: impact des crises historiques sur la tonalité).
-
-[ ] Compléter le fichier README.md : expliquer clairement comment lancer l'application Streamlit et comment installer le projet.
-
-[ ] Push final sur GitHub.
+- [ ] Corriger les chemins pour lancer Streamlit directement depuis la racine du projet.
+- [ ] Utiliser `main.py` comme point d'entree principal.
+- [ ] Sauvegarder les donnees preprocesses pour eviter de recalculer tout le pipeline a chaque lancement.
+- [ ] Ajouter des tests unitaires pour le preprocessing.
+- [ ] Ajouter des tests unitaires pour les fonctions d'analyse.
+- [ ] Agreger les vrais poids TF-IDF par president pour renforcer la comparaison.
