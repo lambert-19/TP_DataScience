@@ -24,7 +24,7 @@ def get_analyzed_data(file_path: str):
 
 
 # --- CHARGEMENT DES DONNÉES ---
-PATH_DATA = "../data/inaug_speeches.csv"
+PATH_DATA = "data/inaug_speeches.csv"
 
 st.title("🇺🇸 Analyse Graphique des Discours d'Investiture Présidents US")
 st.markdown("*Projet Data Engineering & NLP - Dashboard Interactif*")
@@ -41,6 +41,9 @@ except Exception as e:
 st.sidebar.header("⚙️ Configuration Générale")
 liste_presidents = sorted(df['Name'].unique())
 president_principal = st.sidebar.selectbox("Président principal (Onglets 1 & 2) :", liste_presidents)
+
+# Filtrage global pour le président sélectionné
+df_pres = df[df['Name'] == president_principal]
 
 # --- STRUCTURE EN ONGLETS (TABS) ---
 tab1, tab2, tab3 = st.tabs([
@@ -76,7 +79,6 @@ with tab1:
     st.pyplot(fig)
 
     # Zoom Métriques sur le président sélectionné
-    df_pres = df[df['Name'] == president_principal]
     st.markdown(f"### 🔍 Zoom sur {president_principal}")
     col1, col2 = st.columns(2)
     col1.metric("Polarité moyenne", f"{df_pres['polarity'].mean():.2f}")
@@ -88,19 +90,18 @@ with tab1:
 with tab2:
     st.header(f"☁️ Exploration Sémantique : {president_principal}")
 
-    tokens_pres = []
-    for t_list in df_pres['tokens_cleaned']:
-        tokens_pres.extend(t_list)
+    # Récupération des textes nettoyés (chaînes de caractères)
+    texts_pres = df_pres['cleaned_text'].dropna().tolist()
 
-    if tokens_pres:
+    if texts_pres:
         # Création de deux colonnes pour pallier le défaut de précision du Nuage de mots
         col_left, col_right = st.columns(2)
 
         with col_left:
             st.subheader("Nuage de mots visuel")
-            texte_joint = " ".join(tokens_pres)
+            texte_pour_nuage = " ".join(texts_pres)
             wordcloud = WordCloud(width=600, height=400, background_color='white', colormap='viridis').generate(
-                texte_joint)
+                texte_pour_nuage)
             fig_wc, ax_wc = plt.subplots(figsize=(8, 5))
             ax_wc.imshow(wordcloud, interpolation='bilinear')
             ax_wc.axis('off')

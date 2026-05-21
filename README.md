@@ -146,10 +146,9 @@ Ce module gere :
 - le nettoyage des caracteres parasites;
 - le traitement NLP avec SpaCy;
 - la creation des colonnes :
-  - `tokens_cleaned`;
   - `pos_tags`;
   - `entities`;
-  - `text_cleaned`.
+  - `cleaned_text`.
 
 ### `src/analysis.py`
 

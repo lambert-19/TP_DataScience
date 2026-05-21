@@ -20,7 +20,7 @@
 - [x] Implementer la lemmatisation des discours.
 - [x] Ajouter le POS tagging.
 - [x] Ajouter la reconnaissance d'entites nommees (NER).
-- [x] Generer une colonne `text_cleaned` exploitable pour le TF-IDF.
+- [x] Generer une colonne `cleaned_text` exploitable pour le TF-IDF.
 
 ## Etape 3 - Traitements et analyses IA
 
@@ -56,16 +56,7 @@
 - [x] Completer le fichier `README.md`.
 - [x] Expliquer dans le README comment installer le projet.
 - [x] Expliquer dans le README comment lancer l'application Streamlit.
-- [ ] Rediger le rapport PDF avec la demarche technique.
+- [x] Rediger le rapport PDF avec la demarche technique.
 - [ ] Ajouter des captures d'ecran du dashboard dans le rapport.
-- [ ] Rediger les analyses et insights metier dans le rapport.
-- [ ] Push final sur GitHub.
-
-## Ameliorations possibles
-
-- [ ] Corriger les chemins pour lancer Streamlit directement depuis la racine du projet.
-- [ ] Utiliser `main.py` comme point d'entree principal.
-- [ ] Sauvegarder les donnees preprocesses pour eviter de recalculer tout le pipeline a chaque lancement.
-- [ ] Ajouter des tests unitaires pour le preprocessing.
-- [ ] Ajouter des tests unitaires pour les fonctions d'analyse.
-- [ ] Agreger les vrais poids TF-IDF par president pour renforcer la comparaison.
+- [x] Rediger les analyses et insights metier dans le rapport.
+- [x] Push final sur GitHub.

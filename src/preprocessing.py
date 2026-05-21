@@ -1,18 +1,15 @@
 import pandas as pd
 import spacy
 import re
+import os
 
 # Chargement du modèle de langue anglais
-nlp = spacy.load("en_core_web_sm")
 try:
     nlp = spacy.load("en_core_web_sm")
 except OSError:
-    # Au cas où le modèle n'est pas installé
-    import os
     os.system("python -m spacy download en_core_web_sm")
     nlp = spacy.load("en_core_web_sm")
 
-def load_data(file_path: str = "../data/inaug_speeches.csv") -> pd.DataFrame:
 def load_data(file_path: str = "data/inaug_speeches.csv") -> pd.DataFrame:
     """
     Charge les discours présidentiels depuis le fichier CSV avec l'encodage correct.
@@ -110,8 +107,7 @@ def save_processed_data(df: pd.DataFrame, output_path: str = "data/processed_spe
 
 if __name__ == "__main__":
     # Note : lancez le script depuis la racine du projet pour que ce chemin fonctionne
-    path = "../data/inaug_speeches.csv" 
-    path = "data/inaug_speeches.csv" 
+    path = "data/inaug_speeches.csv"
     try:
         data = load_data(path)
         data = inspect_and_clean(data)
@@ -131,4 +127,3 @@ if __name__ == "__main__":
 
     except FileNotFoundError:
         print(f"Erreur : Fichier non trouvé à '{path}'. Vérifiez votre répertoire de travail.")
-        print(f"Erreur : Fichier non trouvé à '{path}'.")
