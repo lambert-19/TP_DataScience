@@ -1,56 +1,33 @@
 import pandas as pd
-import string
 import spacy
 import re
 
-# Chargement du modèle de langue anglaise SpaCy
+# Chargement du modèle de langue anglais
+nlp = spacy.load("en_core_web_sm")
 try:
     nlp = spacy.load("en_core_web_sm")
 except OSError:
-    print("Modèle SpaCy 'en_core_web_sm' non trouvé. Téléchargement en cours...")
-    from spacy.cli import download
-
-    download("en_core_web_sm")
+    # Au cas où le modèle n'est pas installé
+    import os
+    os.system("python -m spacy download en_core_web_sm")
     nlp = spacy.load("en_core_web_sm")
 
-
 def load_data(file_path: str = "../data/inaug_speeches.csv") -> pd.DataFrame:
+def load_data(file_path: str = "data/inaug_speeches.csv") -> pd.DataFrame:
     """
     Charge les discours présidentiels depuis le fichier CSV avec l'encodage correct.
     """
     try:
+        # Gestion du chemin relatif pour éviter les erreurs selon le dossier d'exécution
+        if not os.path.exists(file_path) and os.path.exists("../" + file_path):
+            file_path = "../" + file_path
+        # Utilisation de encoding='latin1' pour éviter les UnicodeDecodeError
+        # index_col=0 car la première colonne est un index numérique
         df = pd.read_csv(file_path, index_col=0, encoding='latin1')
         return df
     except Exception as e:
         print(f"Erreur lors du chargement : {e}")
         raise
-
-
-def clean_raw_text(text: str) -> str:
-    """
-    Nettoie en profondeur le texte brut des discours pour éliminer
-    les artefacts d'encodage (ex: u+0097, \x92, etc.) avant le traitement SpaCy.
-    """
-    if not isinstance(text, str):
-        return ""
-
-    # 1. Remplacer les variantes d'apostrophes bizarres (\x92 ou résidus écrits) par une vraie apostrophe
-    text = text.replace("\x92", "'").replace("u+0092", "'")
-
-    # 2. Supprimer explicitement les résidus textuels de type hexadécimal/unicode (ex: u+0097)
-    text = re.sub(r'u\+[0-9a-fA-F]{4}', ' ', text)
-
-    # 3. Supprimer les caractères de contrôle non-ASCII invisibles ou parasites (\x00 à \x1f et \x7f à \x9f)
-    text = re.sub(r'[\x00-\x1f\x7f-\x9f]', ' ', text)
-
-    # 4. Remplacer les tirets longs ou bizarres par des espaces
-    text = text.replace("—", " ").replace("--", " ")
-
-    # 5. Normaliser les espaces multiples créés par les étapes de suppression
-    text = re.sub(r'\s+', ' ', text).strip()
-
-    return text
-
 
 def inspect_and_clean(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -59,12 +36,13 @@ def inspect_and_clean(df: pd.DataFrame) -> pd.DataFrame:
     """
     print("\n--- Inspection des données ---")
     print(f"Nombre de lignes initiales : {len(df)}")
-
+    
     # 1. Analyse des valeurs manquantes
     missing = df.isnull().sum()
     if missing.any():
         print("\nValeurs manquantes détectées :")
         print(missing[missing > 0])
+        # Suppression des lignes où le discours est vide
         df = df.dropna(subset=['text'])
         print("=> Lignes sans contenu textuel supprimées.")
     else:
@@ -81,88 +59,76 @@ def inspect_and_clean(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-
-def process_text_spacy(text: str):
+def process_speeches(df: pd.DataFrame, text_col: str = 'text') -> pd.DataFrame:
     """
-    Pipeline NLP complet utilisant SpaCy.
-    Effectue : Tokenisation, Nettoyage (minuscules, stop words, ponctuations),
-    Lemmatisation, POS Tagging et NER.
+    Exécute le pipeline NLP : nettoyage, lemmatisation, POS tagging et NER.
+    Pipeline complet : nettoyage, lemmatisation (minuscules/stop words/ponctuation), POS et NER.
     """
-    if not isinstance(text, str):
-        return [], [], []
+    print("\n--- Prétraitement NLP (Nettoyage, Lemmatisation, POS, NER) ---")
+    
+    # Nettoyage initial : suppression des caractères spéciaux (ex: <U+0097>, )
+    df[text_col] = df[text_col].apply(lambda x: re.sub(r'<U\+[0-9A-F]+>', ' ', str(x)))
+    df[text_col] = df[text_col].apply(lambda x: x.replace('', '').strip())
 
-    # Application du pipeline SpaCy sur le texte préalablement nettoyé de ses bruits d'encodage
-    doc = nlp(text)
+    cleaned_texts = []
+    all_pos = []
+    all_ner = []
 
-    tokens_cleaned = []
-    pos_tags = []
-    entities = []
+    # Utilisation de nlp.pipe pour traiter les textes efficacement par lots
+    # disable=["parser"] accélère le traitement si on n'a pas besoin de l'arbre syntaxique
+    # nlp.pipe est beaucoup plus rapide pour traiter de gros volumes de texte
+    for doc in nlp.pipe(df[text_col], batch_size=10, disable=["parser"]):
+        # 1. Nettoyage sémantique, Tokenisation et Lemmatisation
+        # On filtre les stop words, la ponctuation et on ne garde que les jetons alphabétiques
+        tokens = [token.lemma_.lower() for token in doc 
+                  if not token.is_stop and not token.is_punct and not token.is_space and token.is_alpha]
+        cleaned_texts.append(" ".join(tokens))
+        
+        # 2. POS Tagging (Part-of-Speech)
+        all_pos.append([(token.text, token.pos_) for token in doc if not token.is_space])
+        
+        # 3. NER (Named Entity Recognition)
+        all_ner.append([(ent.text, ent.label_) for ent in doc.ents])
 
-    # 1. Tokenisation, Nettoyage, Lemmatisation et POS Tagging
-    for token in doc:
-        # Stockage du POS Tagging de base
-        pos_tags.append((token.text, token.pos_))
-
-        # Filtrage sémantique rigoureux
-        token_text = token.text.lower().strip()
-        lemma_text = token.lemma_.lower().strip()
-
-        # On vérifie que le mot et son lemme ne contiennent aucun résidu parasite
-        if (
-                not token.is_stop
-                and token_text not in string.punctuation
-                and lemma_text not in string.punctuation
-                and len(token_text) > 1
-                and not token_text.startswith('u+')
-                and not token_text.startswith('\\')
-        ):
-            # Ajout du lemme propre
-            tokens_cleaned.append(lemma_text)
-
-    # 2. Reconnaissance d'Entités Nommées (NER)
-    for ent in doc.ents:
-        entities.append((ent.text, ent.label_))
-
-    return tokens_cleaned, pos_tags, entities
-
-
-def nlp_pipeline(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Applique le traitement linguistique complet sur l'ensemble du DataFrame.
-    """
-    print("\n--- Lancement du traitement NLP (SpaCy) ---")
-    print("Cette étape peut prendre quelques dizaines de secondes selon la taille du dataset...")
-
-    # ÉTAPE CLÉ : On applique d'abord le nettoyage de texte brut sur la colonne
-    df['text'] = df['text'].apply(clean_raw_text)
-
-    # Lancement de la tokenisation/lemmatisation SpaCy
-    res = df['text'].apply(process_text_spacy)
-
-    df['tokens_cleaned'] = [r[0] for r in res]
-    df['pos_tags'] = [r[1] for r in res]
-    df['entities'] = [r[2] for r in res]
-
-    # Reconstitution d'une chaîne textuelle propre pour l'étape TF-IDF
-    df['text_cleaned'] = df['tokens_cleaned'].apply(lambda x: " ".join(x))
-
-    print("✅ Traitement linguistique terminé avec succès.")
+    df['cleaned_text'] = cleaned_texts
+    df['pos_tags'] = all_pos
+    df['entities'] = all_ner
+    
+    print("=> Prétraitement terminé.")
     return df
 
+def save_processed_data(df: pd.DataFrame, output_path: str = "data/processed_speeches.pickle"):
+    """
+    Sauvegarde le DataFrame traité. 
+    Note: On utilise 'pickle' car les colonnes NER/POS contiennent des listes d'objets complexes.
+    """
+    try:
+        df.to_pickle(output_path)
+        print(f"✅ Données traitées sauvegardées dans : {output_path}")
+    except Exception as e:
+        print(f"❌ Erreur lors de la sauvegarde : {e}")
 
 if __name__ == "__main__":
-    path = "../data/inaug_speeches.csv"
+    # Note : lancez le script depuis la racine du projet pour que ce chemin fonctionne
+    path = "../data/inaug_speeches.csv" 
+    path = "data/inaug_speeches.csv" 
     try:
-        # 1. Acquisition et Inspection
         data = load_data(path)
         data = inspect_and_clean(data)
+        data = process_speeches(data)
+        
+        print("\n✅ Aperçu des données (colonnes principales) :")
+        print(data[['Name', 'Inaugural Address', 'Date', 'text']].head())
+        print("\n✅ Aperçu des données après nettoyage (3 premières lignes) :")
+        print(data[['Name', 'Date', 'cleaned_text']].head(3))
+        print("\nExemple d'entités nommées extraites du premier discours :")
+        print(data['entities'].iloc[0][:5])
+        save_processed_data(data)
 
-        # 2. Pipeline de Prétraitement linguistique complet
-        data = nlp_pipeline(data)
-
-        # Aperçu des nouvelles colonnes pour validation
-        print("\n🚀 Aperçu du DataFrame enrichi et nettoyé :")
-        print(data[['Name', 'tokens_cleaned', 'entities']].head(2))
+        print("\n--- Résumé ---")
+        print(f"Discours traités : {len(data)}")
+        print(f"Colonnes générées : {', '.join(data.columns)}")
 
     except FileNotFoundError:
         print(f"Erreur : Fichier non trouvé à '{path}'. Vérifiez votre répertoire de travail.")
+        print(f"Erreur : Fichier non trouvé à '{path}'.")
